@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="kr">
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500&display=swap"
+      rel="stylesheet"
+    />
+
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        overflow: hidden;
+        height: 100%;
+        font-family: "Lato", Arial, sans-serif;
+        color: rgba(0, 0, 0, 1);
+        background-color: rgb(132, 208, 255);
+        border-radius: 12px;
+        margin: 0px;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      .container .background-img {
+        opacity: 0.5;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+      }
+
+      .container-header {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .container-header .desc {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0px 8px;
+        text-shadow: rgba(0, 0, 0, 0.3) 2px 2px 4px;
+        transition: 0.1s ease-in-out;
+      }
+
+      .container-header .desc:hover {
+        margin: 0px 25px;
+        transition: 0.1s ease-in-out;
+      }
+
+      .container-header .award > img {
+        width: 28px;
+        height: 28px;
+      }
+
+      .container-rank {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: auto;
+        width: 100%;
+        margin-bottom: 8%;
+      }
+
+      .container-rank .rank-box {
+        transition: 0.2s ease-in-out;
+        width: 76%;
+        height: 26px;
+        line-height: 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        text-align: center;
+        padding: 8px 15px;
+        background-color: rgba(255, 255, 255, 0.9);
+        font-family: "Noto Sans KR", sans-serif;
+        color: rgba(0, 0, 0, 0.8);
+        border-radius: 20px;
+        font-size: 14px;
+        box-shadow: rgba(0, 0, 0, 0.2) 4px 4px 8px;
+      }
+
+      .rank-box:hover {
+        transition: 0.1s ease-in-out;
+        background-color: rgba(255, 255, 255);
+        width: 82%;
+      }
+
+      .rank-box > img,
+      .myRank {
+        width: 28px;
+        height: 28px;
+      }
+
+      #container-rank::-webkit-scrollbar {
+        width: 5px; /*스크롤바의 너비*/
+      }
+
+      #container-rank::-webkit-scrollbar-thumb {
+        background-color: lightslategray; /*스크롤바의 색상*/
+        border-radius: 5px;
+      }
+
+      #container-rank::-webkit-scrollbar-track {
+        opacity: 0; /*스크롤바 트랙 색상*/
+      }
+
+      .container-rank .rank-box .name {
+        width: 70%;
+        height: 80%;
+      }
+
+      .container-rank .rank-box .time {
+        width: 20%;
+        height: 80%;
+        margin-right: 8px;
+      }
+
+      .rank-box #t1 {
+        color: rgb(161, 156, 7);
+      }
+
+      .rank-box #t2 {
+        color: rgb(127, 127, 127);
+      }
+
+      .rank-box #t3 {
+        color: rgb(119, 73, 21);
+      }
+
+      .rank-box #t4 #t5 #tm {
+        color: rgb(106, 106, 106);
+      }
+
+      .rank-box.me {
+        border: 2px solid rgba(210, 74, 74, 0.353);
+      }
+
+      .rank-box .myRank {
+        margin-left: 2px;
+        width: 24px;
+        height: 24px;
+        border-radius: 20px;
+        background-color: rgba(210, 74, 74, 0.8);
+        line-height: 23px;
+        color: white;
+        font-size: 13px;
+      }
+
+      .x-mark img {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        width: 20px;
+        height: 20px;
+        filter: invert(40%);
+        transition: 0.1s ease-in-out;
+      }
+
+      #x-mark {
+        visibility: collapse;
+      }
+
+      .x-mark img:hover {
+        filter: invert(20%);
+        transition: 0.1s ease-in-out;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <input id="x-mark" type="button" onclick="widgetDestroy();" />
+      <div class="x-mark">
+        <label for="x-mark">
+          <img
+            src="https://i.imgur.com/DMxZWJm.png"
+            onerror="this.src = 'x-mark.png'"
+          />
+        </label>
+      </div>
+      <!-- <img class="background-img" src="what-is-software.png" alt="" /> -->
+      <div class="container-header">
+        <div class="logo">
+          <!-- <img src="swLogo.png" width="80px" height="80px" /> -->
+        </div>
+        <div class="award">
+          <img
+            src="https://i.imgur.com/adOmA23.png"
+            onerror="this.src = 'flame.png'"
+          />
+        </div>
+        <div class="desc">LOUNGE RANKING</div>
+        <div class="award">
+          <img
+            src="https://i.imgur.com/adOmA23.png"
+            onerror="this.src = 'flame.png'"
+          />
+        </div>
+      </div>
+      <div id="container-rank" class="container-rank">
+        <div id="r1" class="rank-box">
+          <img
+            src="https://i.imgur.com/L4WXHdy.png"
+            onerror="this.src = 'medal1.png'"
+          />
+          <div id="n1" class="name"></div>
+          <div id="t1" class="time"></div>
+        </div>
+        <div id="r2" class="rank-box">
+          <img
+            src="https://i.imgur.com/22tjrgf.png"
+            onerror="this.src = 'medal2.png'"
+          />
+          <div id="n2" class="name"></div>
+          <div id="t2" class="time"></div>
+        </div>
+        <div id="r3" class="rank-box">
+          <img
+            src="https://i.imgur.com/WIweKDE.png"
+            onerror="this.src = 'medal3.png'"
+          />
+          <div id="n3" class="name"></div>
+          <div id="t3" class="time"></div>
+        </div>
+        <div id="r4" class="rank-box">
+          <img
+            src="https://i.imgur.com/rjFtTfa.png"
+            onerror="this.src = 'medal4.png'"
+          />
+          <div id="n4" class="name"></div>
+          <div id="t4" class="time"></div>
+        </div>
+        <div id="r5" class="rank-box">
+          <img
+            src="https://i.imgur.com/P1v2zKi.png"
+            onerror="this.src = 'medal5.png'"
+          />
+          <div id="n5" class="name"></div>
+          <div id="t5" class="time"></div>
+        </div>
+        <!--
+        <div class="rank-box me">
+          <div class="myRank">10</div>
+          <div id="nm" class="name">양래은</div>
+          <div id="tm" class="time">5초</div>
+        </div>
+        -->
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    window.addEventListener("message", function (e) {
+      // state라는 태그 밸류를 보냈으니 아래 형태로 받는다
+      const playerRanking = e.data.result;
+      const myRankIndex = e.data.myRankIndex;
+      const myInfo = e.data.info;
+
+      console.log(myRankIndex);
+
+      // 위의 id test 라는 곳의 텍스트로 적용한다
+      for (let i = 0; i < playerRanking.length && i < 5; i++) {
+        document.getElementById(`n${i + 1}`).innerText = playerRanking[i].name;
+
+        let _timer = Number(playerRanking[i].tag.time.split("/")[1]);
+        if (_timer < 60) {
+          _timer = _timer + "초";
+        } else {
+          let m = Math.floor(_timer / 60);
+          let s = _timer % 60;
+          _timer = m + "분 " + s + "초 ";
+
+          if (m >= 60) {
+            let h = Math.floor(m / 60);
+            m = m % 60;
+            _timer = h + "시간 " + m + "분 " + s + "초 ";
+          }
+        }
+
+        document.getElementById(`t${i + 1}`).innerText = _timer;
+      }
+
+      // ranking에 내가 없을 경우 -> div박스 하나 추가!
+      if (myRankIndex >= 5) {
+        const div = document.createElement("div");
+        div.className = "rank-box me";
+
+        // 자기 순위 넣기
+        const myRank = document.createElement("div");
+        myRank.className = "myRank";
+        myRank.innerText = myRankIndex + 1;
+
+        // 자기 이름 넣기
+        const myName = document.createElement("div");
+        myName.id = "nm";
+        myName.className = "name";
+        myName.innerText = myInfo.name;
+
+        // 자기 time 넣기
+        const myTime = document.createElement("div");
+        myTime.id = "tm";
+        myTime.className = "time";
+
+        let _timer = Number(myInfo.tag.time.split("/")[1]);
+        if (_timer < 60) {
+          _timer = _timer + "초";
+        } else {
+          let m = Math.floor(_timer / 60);
+          let s = _timer % 60;
+          _timer = m + "분 " + s + "초 ";
+
+          if (m >= 60) {
+            let h = Math.floor(m / 60);
+            m = m % 60;
+            _timer = h + "시간 " + m + "분 " + s + "초 ";
+          }
+        }
+
+        myTime.innerText = _timer;
+
+        div.appendChild(myRank);
+        div.appendChild(myName);
+        div.appendChild(myTime);
+        const containerRank = document.getElementById("container-rank");
+        containerRank.appendChild(div);
+      } // 랭킹에 내가 있을 경우 테두리 표시하기
+      else {
+        document.getElementById(`r${myRankIndex + 1}`).classList.add("me");
+      }
+    });
+
+    function widgetDestroy() {
+      // App으로 메시지를 보냄.
+      window.parent.postMessage(
+        {
+          type: "close",
+        },
+        "*"
+      );
+    }
+  </script>
+</html>

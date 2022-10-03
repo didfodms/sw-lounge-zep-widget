@@ -2,6 +2,13 @@ let _players = App.players; // App.players : get total players
 let _stateTimer = 0;
 let _widget = null;
 
+/*
+
+player.storage == 스페이스에서 player 마다 따로 저장할 수 있는 string 값
+본 코드에서는 str로 로드하여 str[0]은 state : 관리자, 우승자 등 지정, str[1]은 timer를 관리함
+
+*/
+
 // 모든 플레이어가 이 이벤트를 통해 app에 입장
 App.onJoinPlayer.Add(function (player) {
   player.tag = {
@@ -9,12 +16,12 @@ App.onJoinPlayer.Add(function (player) {
     widget: null,
   };
 
-  let playerTime = player.tag.time;
+  let playerStorage = player.storage;
 
   //init firstPlayer
-  if (playerTime == null) {
-    playerTime = ["X", "0"]; // [0] : state, [1] : timer
-    player.tag.time = playerTime.join("/");
+  if (playerStorage == null) {
+    playerStorage = ["X", "0"]; // [0] : state, [1] : timer
+    player.storage = playerStorage.join("/");
     player.save();
   }
 });
@@ -27,8 +34,8 @@ App.onUpdate.Add(function (dt) {
   for (let i in _players) {
     // Load Player Storage
     let _player = _players[i];
-    let playerTime = _player.tag.time;
-    let str = playerTime.split("/");
+    let playerStorage = _player.storage;
+    let str = playerStorage.split("/");
 
     // Timer
     let _timer = Number(str[1]); //change str[1] to _timer(number)
@@ -38,22 +45,34 @@ App.onUpdate.Add(function (dt) {
       _stateTimer = 0;
       _timer = _timer + 1;
     }
-    str[1] = _timer.toString(); //change _timer to str[1](String)
+
+    // Timer Check. 1시간 마다 이동. 현재 test 30초
+    /*
+  if (_timer % 3600 == 0){
+		
+		_player.spawnAtMap("AEVXPv","2496NE");
+	}
+  */
+
+    //change _timer to str[1](String)
+    str[1] = _timer.toString();
 
     // Update player.storage & save
     playerStorage = [str[0], str[1]];
     _player.tag.time = playerStorage.join("/");
+    _player.storage = playerStorage.join("/");
     _player.save();
   }
 });
 
 App.onSay.Add(function (player, text) {
   // Load player.storage, Map Key is str[0]
-  let playerTime = player.tag.time;
-  let str = playerTime.split("/");
+  let playerStorage = player.storage;
+  let str = playerStorage.split("/");
+
   // check my storage
   if (text == "!") {
-    App.sayToAll(playerTime);
+    App.sayToAll(playerStorage);
   }
 });
 

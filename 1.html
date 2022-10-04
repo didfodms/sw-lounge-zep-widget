@@ -202,11 +202,7 @@
           />
         </label>
       </div>
-      <!-- <img class="background-img" src="what-is-software.png" alt="" /> -->
       <div class="container-header">
-        <div class="logo">
-          <!-- <img src="swLogo.png" width="80px" height="80px" /> -->
-        </div>
         <div class="award">
           <img
             src="https://i.imgur.com/adOmA23.png"
@@ -278,8 +274,6 @@
       const playerRanking = e.data.result;
       const myRankIndex = e.data.myRankIndex;
       const myInfo = e.data.info;
-
-      console.log(myRankIndex);
 
       // 위의 id test 라는 곳의 텍스트로 적용한다
       for (let i = 0; i < playerRanking.length && i < 5; i++) {
@@ -361,5 +355,16 @@
         "*"
       );
     }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.keyCode === 81) {
+        window.parent.postMessage(
+          {
+            type: "close",
+          },
+          "*"
+        );
+      }
+    });
   </script>
 </html>

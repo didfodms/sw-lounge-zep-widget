@@ -1,14 +1,19 @@
 let _stateTimer;
+// _playerList에는 id/name/time/state 문자열이 들어가 있습니다.
 let _playerList;
 
-let pg = App.loadSpritesheet('pg2.png', 154.1, 152, {
-    left: [9,10,11,12,13,14,15,16,17], // 좌방향 이동 이미지
-    right: [0,1,2,3,4,5,6,7,8],		
-},8);
+/* 관리자 사람이 재접시 오류 */
+let pg = App.loadSpritesheet(
+  "pg2.png",
+  154.1,
+  152,
+  {
+    left: [9, 10, 11, 12, 13, 14, 15, 16, 17], // 좌방향 이동 이미지
+    right: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+  },
+  8
+);
 
-
-// initial start //
-// _playerList 초기화 //
 App.onInit.Add(function () {
   _stateTimer = 0;
   _playerList = new Array();
@@ -16,16 +21,20 @@ App.onInit.Add(function () {
 
 // player join시 //
 // initial join -> player add _playerList //
+
+/* split undefined error -> 이유는 아마.. (관리자만!)재접 시 생김. */
 App.onJoinPlayer.Add(function (player) {
+  // 환영 인사
+  player.showCenterLabel(
+    player.name + "님 환영합니다. 공지사항을 읽어주시기 바랍니다."
+  );
+
   player.tag = {
     widget: null,
   };
 
   playerStorage = player.storage;
-  
-  // 환영 인사
-  player.showCenterLabel(player.name+'님 환영합니다. 공지사항을 읽어주시기 바랍니다.');
-  
+
   if (playerStorage === null) {
     // playerStorage를 id/name/time/state 로 설정한다. //
     let playerId = player.id;
@@ -43,12 +52,41 @@ App.onJoinPlayer.Add(function (player) {
     player.storage = temp.join("/");
     _playerList.push(temp.join("/"));
     player.save();
-
-    // 처음 접속 시 플레이어 리스트, 리스트 길이 출력
+  } else {
+    // 관리자 권한이 있는 사람이 재접할 시에만 에러가 생긴다!!!
+    // error message -> _playerList.length == 0
+    App.sayToAll("_playerList.length : " + _playerList.length);
     for (let i = 0; i < _playerList.length; i++) {
       App.sayToAll(_playerList[i]);
     }
-    App.sayToAll(_playerList.length);
+
+    // playerStorage 갱신 하기 (초기화 후 접속한 경우)
+    let playerIndex = playerIndexOf(_playerList, player.id.toString());
+    if (playerIndex < 0) {
+      App.sayToAll("playerIndex reference error 0");
+    }
+
+    let playerTime = _playerList[playerIndex].split("/")[2];
+    let playerState = _playerList[playerIndex].split("/")[3];
+    if (playerState !== "X") {
+      player.title = playerState;
+      player.sendUpdated();
+    }
+
+    let temp = [
+      player.id.toString(),
+      player.name.toString(),
+      playerTime.toString(),
+      playerState.toString(),
+    ];
+
+    player.storage = temp.join("/");
+    player.save();
+  }
+
+  // print all _playerList -> 재접시 _playerList가 null이 되는 문제.
+  for (let i = 0; i < _playerList.length; i++) {
+    App.sayToAll(`_playerList[${i}] = ${_playerList[i]}`);
   }
 });
 
@@ -59,6 +97,24 @@ App.onUpdate.Add(function (dt) {
     let player = players[i];
     let playerStorage = player.storage;
     let str = playerStorage.split("/");
+
+    let playerIndex = playerIndexOf(_playerList, player.id.toString());
+    // 주의! 신규 사용자가 아닌 사람은 error 발생! (ex. 나,,)
+    // 따라서 앱을 새로 만들어야 한다.
+    if (playerIndex < 0) {
+      App.sayToAll("playerIndex reference error 1");
+    }
+
+    // 관리자는 시간 업데이트 X
+    if (str[3] === "Manager") {
+      str[2] = "0";
+      playerStorage = [str[0], str[1], str[2], str[3]];
+      player.storage = playerStorage.join("/");
+
+      player.save();
+      _playerList[playerIndex] = player.storage;
+      continue;
+    }
 
     let timer = Number(str[2]);
     _stateTimer += dt;
@@ -73,18 +129,8 @@ App.onUpdate.Add(function (dt) {
     playerStorage = [str[0], str[1], str[2], str[3]];
     player.storage = playerStorage.join("/");
 
-    // playerIndex 찾는데에 오류 <- but. 에러메세지 안뜨는거 보면 playerIndex는 찾아짐
-    // 출력 값 : playerIndex = ?? 이거 확인하기. app에 넣어놓음.
-    // player.id값으로 찾게 되어있는데 id값이 number가 아님;;
-    // playerIndex 성공적으로 찾아짐.
-    let playerIndex = playerIndexOf(_playerList, player.id);
-    // 주의! 신규 사용자가 아닌 사람은 error 발생! (ex. 나,,)
-    if (playerIndex < 0) {
-      App.sayToAll("playerIndex reference error 1");
-    }
     player.save();
     _playerList[playerIndex] = player.storage.toString();
-    // App.sayToAll("playerIndex = " + playerIndex);
   }
 });
 
@@ -94,10 +140,14 @@ App.onSay.Add(function (player, text) {
 
   if (text === "!") {
     App.sayToAll(playerStorage);
-    App.sayToAll("접속했던 총 플레이어 수 : " + _playerList.length);
+    App.sayToAll("랭킹 인원 수 : " + _playerList.length);
+    for (let i = 0; i < _playerList.length; i++) {
+      App.sayToAll(`_playerList[${i}] = ${_playerList[i]}`);
+    }
   }
 });
 
+/* No Error */
 App.addOnKeyDown(81, function (player) {
   let playerWidget = player.tag.widget;
 
@@ -108,17 +158,10 @@ App.addOnKeyDown(81, function (player) {
       return Number(b.split("/")[2]) - Number(a.split("/")[2]);
     });
 
-    // playerListSort 모두 출력 -> 정상적으로 출력됨.
-    for (let i = 0; i < playerListSort.length; i++) {
-      App.sayToAll(playerListSort[i]);
-    }
-
-    // indexOf 함수 따로 만들기
-    let playerIndex = playerIndexOf(playerListSort, player.id);
+    let playerIndex = playerIndexOf(playerListSort, player.id.toString());
     if (playerIndex < 0) {
       App.sayToAll("playerIndex reference error 2");
     }
-    App.sayToAll("당신의 순위는 현재 : " + playerIndex + "+1위 입니다.");
 
     playerWidget.sendMessage({
       result: playerListSort,
@@ -135,9 +178,10 @@ App.addOnKeyDown(81, function (player) {
   });
 });
 
-const playerIndexOf = (arr, playerId) => {
-  for (let i = 0; i < arr.length; i++) {
-    let arrCurId = arr[i].split("/")[0];
+/* No Error */
+const playerIndexOf = (arrStr, playerId) => {
+  for (let i = 0; i < arrStr.length; i++) {
+    let arrCurId = arrStr[i].split("/")[0];
 
     if (arrCurId === playerId) {
       return i;
@@ -151,39 +195,60 @@ App.onSay.Add(function (player, text) {
   let playerStorage = player.storage;
   let str = playerStorage.split("/");
 
-	// 전체 채팅, 라벨 채팅 둘 다.
-	if (text.substr(0,2) =="!!"){
-		App.sayToAll(text.substr(2));
-		for(let i in _players){
-			let _player = _players[i];
-			_player.showCenterLabel(text.substr(2));	
-		}
-	}
-	
-	// 펭귄 변신
-	if(text == '!#') {
-		player.title = "Manager";
-		player.sprite = pg;
-		player.sendUpdated();
-	}
-	
-  if (text === "!@") {
-    let temp = ["Manager", "0"];
-    playerStorage = temp.join("/");
-    player.storage = playerStorage;
-    str = playerStorage.split("/");
-    player.title = str[0];
-    player.save();
-    player.sendUpdated();
+  // 전체 채팅, 라벨 채팅 둘 다.
+  if (text.substr(0, 2) == "!!") {
+    let _players = App.players; // player data load
+
+    App.sayToAll(text.substr(2));
+    for (let i in _players) {
+      let _player = _players[i];
+      _player.showCenterLabel(text.substr(2));
+    }
   }
 
+  // 펭귄 변신 + 관리자
+  if (text == "!#") {
+    player.title = "Manager";
+    str = playerStorage.split("/");
+    str[2] = "0";
+    str[3] = "Manager";
+    player.storage = str.join("/");
+    player.sprite = pg;
+    player.save();
+    player.sendUpdated();
+
+    let playerIndex = playerIndexOf(_playerList, player.id.toString());
+    if (playerIndex < 0) {
+      App.sayToAll("playerIndex reference error 3");
+    }
+    _playerList[playerIndex] = player.storage;
+  }
+
+  // 변신 풀기 + 관리자
+  if (text === "!@") {
+    let temp = [player.id.toString(), player.name, "0", "Manager"];
+    playerStorage = temp.join("/");
+    player.storage = playerStorage;
+    player.title = "Manager";
+    player.sprite = null;
+    player.save();
+    player.sendUpdated();
+
+    let playerIndex = playerIndexOf(_playerList, player.id.toString());
+    if (playerIndex < 0) {
+      App.sayToAll("playerIndex reference error 4");
+    }
+    _playerList[playerIndex] = player.storage;
+  }
+
+  // 모든 랭크 출력
   if (text === "!rank") {
     let playerListSort = _playerList.sort(function (a, b) {
-      return Number(b.storage.split("/")[2] - Number(a.storage.split("/")[2]));
+      return Number(b.split("/")[2]) - Number(a.split("/")[2]);
     });
 
     for (let i = 0; i < playerListSort.length; i++) {
-      let __timer = Number(playerListSort[i].storage.split("/")[2]);
+      let __timer = Number(playerListSort[i].split("/")[2]);
 
       if (__timer < 60) {
         __timer = __timer + "초";
@@ -199,12 +264,7 @@ App.onSay.Add(function (player, text) {
       }
 
       App.sayToAll(
-        i +
-          1 +
-          "등 " +
-          playerListSort[i].storage.split("/")[1] +
-          " 시간 : " +
-          __timer
+        i + 1 + "등 " + playerListSort[i].split("/")[1] + " 시간 : " + __timer
       );
     }
   }
@@ -215,44 +275,75 @@ App.onSay.Add(function (player, text) {
   if (text == "!100") {
     player.moveSpeed = 100;
   }
-  /* 수정 안함
-  if (text == "!초기화") {
-    _players = App.players; // player data load
 
-    // player Rank Load
-    let playerResult = _players.sort(function (a, b) {
-      return (
-        Number(b.tag.time.split("/")[1]) - Number(a.tag.time.split("/")[1])
-      );
+  // 시간 0 초기화, 상태 갱신
+  if (text === "!초기화") {
+    let _players = App.players;
+
+    let playerListSort = _playerList.sort(function (a, b) {
+      return Number(b.split("/")[2]) - Number(a.split("/")[2]);
     });
 
-    // check each player storage
-    for (let i in _players) {
-      // Load Player Storage
-      let _player = _players[i];
-      let playerStorage = _player.storage;
-      let str = playerStorage.split("/");
+    for (let i = 0; i < playerListSort.length; i++) {
+      let curPlayer = playerListSort[i];
+      let str = curPlayer.split("/");
 
-      //check each player rank and title with str[0]
-      if (playerResult[0].name == _player.name) {
-        str[0] = "<1등 - 5point>";
-      } else if (playerResult[1].name == _player.name) {
-        str[0] = "<2등 - 4point>";
-      } else if (playerResult[2].name == _player.name) {
-        str[0] = "<3등 - 3point>";
-      } else {
-        str[0] = "<1point>";
+      switch (i) {
+        case 0: {
+          str[3] = "<1등 - 5point>";
+          break;
+        }
+        case 1: {
+          str[3] = "<2등 - 4point>";
+          break;
+        }
+        case 2: {
+          str[3] = "<3등 - 3point>";
+          break;
+        }
+        default: {
+          if (str[3] !== "Manager") {
+            str[3] = "<1point>";
+          }
+          break;
+        }
       }
 
-      if (str[0] != null) {
-        _player.title = str[0];
+      // App.players로 갖고오면 접속중이 아닌 사람들은 초기화 못함.
+      // 따라서 전역변수 _playerList로 초기화를 해줘야 하는데
+      // 그렇게되면 player에 접근 불가능.
+      // 따라서 _playerList에 저장해두었다가 나갔다오면 뜨게 해야함
+      // 결론 : 접속하고 있는 사람들은 우선 갱신
+      // 접속 X사람들은 재접시 갱신 -> 오류 발생!
+      if (str[3] !== "X") {
+        for (let i = 0; i < _players.length; i++) {
+          let _player = _players[i];
+          if (str[0] === _player.storage.split("/")[0]) {
+            let _playerStorage = _player.storage;
+            let _str = _playerStorage.split("/");
+            _str[3] = str[3];
+            _player.title = _str[3];
+            let temp = [_str[0], _str[1], _str[2], _str[3]];
+            _player.storage = temp.join("/");
+
+            _player.save();
+            _player.sendUpdated();
+          }
+        }
       }
-      str[1] = "0";
-      playerStorage = [str[0], str[1]];
-      _player.tag.time = playerStorage.join("/");
-      _player.storage = playerStorage.join("/");
-      _player.sendUpdated();
-      _player.save();
+
+      str[2] = "0";
+      let temp = [str[0], str[1], str[2], str[3]];
+      // time 초기화, state 갱신된 정보 -> curPlayer
+      curPlayer = temp.join("/");
+
+      // 초기화한 값 리스트에 저장.
+      playerListSort[i] = new String(curPlayer);
+      _playerList[i] = new String(curPlayer);
+
+      // error message -> 정상적으로 동작.
+      App.sayToAll(`playerListSort[${i}] = ${curPlayer}`);
+      App.sayToAll(`_playerList[${i}] = ${curPlayer}`);
     }
-  } */
+  }
 });

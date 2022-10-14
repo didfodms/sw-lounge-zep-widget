@@ -272,14 +272,18 @@
     window.addEventListener("message", function (e) {
       // state라는 태그 밸류를 보냈으니 아래 형태로 받는다
       const playerRanking = e.data.result;
-      const myRankIndex = e.data.myRankIndex;
+      const playerIndex = e.data.playerIndex;
       const myInfo = e.data.info;
 
       // 위의 id test 라는 곳의 텍스트로 적용한다
       for (let i = 0; i < playerRanking.length && i < 5; i++) {
-        document.getElementById(`n${i + 1}`).innerText = playerRanking[i].name;
+        let curPlayerStorage = playerRanking[i];
+        let curPlayerName = curPlayerStorage.split("/")[1];
+        let curPlayerTime = Number(curPlayerStorage.split("/")[2]);
 
-        let _timer = Number(playerRanking[i].tag.time.split("/")[1]);
+        document.getElementById(`n${i + 1}`).innerText = curPlayerName;
+
+        let _timer = curPlayerTime;
         if (_timer < 60) {
           _timer = _timer + "초";
         } else {
@@ -298,27 +302,27 @@
       }
 
       // ranking에 내가 없을 경우 -> div박스 하나 추가!
-      if (myRankIndex >= 5) {
+      if (playerIndex >= 5) {
         const div = document.createElement("div");
         div.className = "rank-box me";
 
         // 자기 순위 넣기
         const myRank = document.createElement("div");
         myRank.className = "myRank";
-        myRank.innerText = myRankIndex + 1;
+        myRank.innerText = playerIndex + 1;
 
         // 자기 이름 넣기
         const myName = document.createElement("div");
         myName.id = "nm";
         myName.className = "name";
-        myName.innerText = myInfo.name;
+        myName.innerText = myInfo.storage.split("/")[1];
 
         // 자기 time 넣기
         const myTime = document.createElement("div");
         myTime.id = "tm";
         myTime.className = "time";
 
-        let _timer = Number(myInfo.tag.time.split("/")[1]);
+        let _timer = Number(myInfo.storage.split("/")[2]);
         if (_timer < 60) {
           _timer = _timer + "초";
         } else {
@@ -342,7 +346,7 @@
         containerRank.appendChild(div);
       } // 랭킹에 내가 있을 경우 테두리 표시하기
       else {
-        document.getElementById(`r${myRankIndex + 1}`).classList.add("me");
+        document.getElementById(`r${playerIndex + 1}`).classList.add("me");
       }
     });
 
@@ -355,16 +359,5 @@
         "*"
       );
     }
-
-    window.addEventListener("keydown", (e) => {
-      if (e.keyCode === 81) {
-        window.parent.postMessage(
-          {
-            type: "close",
-          },
-          "*"
-        );
-      }
-    });
   </script>
 </html>
